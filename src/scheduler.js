@@ -1,6 +1,6 @@
 import {ELEMENT_TEXT, TAG_HOST, TAG_ROOT, TAG_TEXT, PLACEMENT, DELETION, UPDATE, TAG_CLASS, TAG_FUNCTION_COMPONENT} from "./constants";
 import {setProps} from "./utils";
-import {UpdateQueue} from "./UpdateQueue";
+import {UpdateQueue, Update} from "./UpdateQueue";
 
 /**
  * 从根节点开始渲染和调度 两个阶段
@@ -14,6 +14,8 @@ let nextUnitOfWork = null; //下一个工作单元
 let workInProgressRoot = null; //RootFiber 应用的根,正在渲染的
 let currentRoot = null; // 渲染成功之后的当前根ROOT
 let deletions = []; //删除的节点并不放在effectlist,所以需要单独记录
+let workInProgressFiber = null; //正在工作中的fiber
+let hookIndex=0;
 export function scheduleRoot(rootFiber) { // {tag:TAG_ROOT,stateNode:container, props:{children:[element]}}
     if (currentRoot && currentRoot.alternate) {//第二次之后的更新
         workInProgressRoot = currentRoot.alternate;//双缓冲机制
@@ -101,6 +103,9 @@ function beginWork(currentFiber) {
     }
 }
 function updateFunctionComponent(currentFiber) {
+    workInProgressFiber=currentFiber;
+    hookIndex=0;
+    workInProgressFiber.hooks=[];
     const newChildren = [currentFiber.type(currentFiber.props)];
     reconcileChildren(currentFiber,newChildren);
 }
@@ -136,7 +141,7 @@ function createDOM(currentFiber) {
 }
 
 function updateDOM(stateNode, oldProps, newProps) {
-    if(stateNode.setAttribute)
+    if(stateNode && stateNode.setAttribute)
     setProps(stateNode, oldProps, newProps)
 }
 
@@ -298,6 +303,39 @@ function commitDeletion(currentFiber,domReturn){
     }else{
         commitDeletion(currentFiber.child,domReturn);
     }
+}
+
+/**
+ *当执行hooks的时候，在执行之前已经在updateFunctionComponent中执行了
+ *  workInProgressFiber=currentFiber;
+ *  hookIndex=0;
+ *  workInProgressFiber.hooks=[];
+ *
+ */
+export function useReducer(reducer, initialValue){
+    let newHook = workInProgressFiber.alternate // 第二次渲染的时候拿到上一次的hook
+        && workInProgressFiber.alternate.hooks
+    && workInProgressFiber.alternate.hooks[hookIndex];
+    if(newHook){ //说明是第二次渲染
+        newHook.state=newHook.updateQueue.forceUpdate(newHook.state);
+    }else{
+        newHook={
+            state:initialValue,
+            updateQueue:new UpdateQueue()
+        }
+    }
+    const dispatch=action=>{
+        let payload = reducer?reducer(newHook.state,action):action
+        newHook.updateQueue.enqueueUpdate(
+            new Update(payload)
+        );
+        scheduleRoot();
+    };
+    workInProgressFiber.hooks[hookIndex++]=newHook;
+    return [newHook.state, dispatch];
+}
+export function useState(initalValue){
+    return useReducer(null,initalValue);
 }
 //告诉浏览器，我现在有任务，请你再闲的时候执行
 //有一个优先级的概念。expirationTime

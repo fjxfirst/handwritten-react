@@ -1,6 +1,7 @@
 import React from './react';
 import ReactDOM from './react-dom';
 
+//useState是一个语法糖，是基于useReducer实现的
 
 //首次渲染与节点更新
 /*let style = {border: '3px solid red', margin: '5px'};
@@ -69,13 +70,35 @@ class ClassCounter extends React.Component {
         )
     }
 }
-function FunctionCounter(props){
+
+function reducer(state, action) {
+    switch (action.type) {
+        case 'ADD':
+            return {count: state.count + 1};
+        default:
+            return state;
+    }
+}
+
+const ADD = 'ADD';
+
+function FunctionCounter(props) {
+    const [numberState, setNumberState] = React.useState({number: 0});
+    const [countState, dispatch] = React.useReducer(reducer, {count: 0});
     return (
-        <div id="counter">
-            <span>{0}</span>
-            <button>加1</button>
+        <div>
+            <div id="counter1">
+                <span>{numberState.number}</span>
+                <button onClick={() => setNumberState({number: numberState.number + 1})}>加1</button>
+            </div>
+            <div id="counter2">
+                <span>{countState.count}</span>
+                <button onClick={() => dispatch({type: ADD})}>加1</button>
+            </div>
         </div>
+
     )
 }
+
 // ReactDOM.render(<ClassCounter name="计数器"/>,document.getElementById('root'));
-ReactDOM.render(<FunctionCounter name="计数器"/>,document.getElementById('root'));
+ReactDOM.render(<FunctionCounter name="计数器"/>, document.getElementById('root'));

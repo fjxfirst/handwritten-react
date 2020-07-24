@@ -1,6 +1,6 @@
 import {ELEMENT_TEXT} from "./constants";
 import {Update, UpdateQueue} from './UpdateQueue'
-import {scheduleRoot} from "./scheduler";
+import {scheduleRoot,useReducer, useState} from "./scheduler";
 function createElement(type, config, ...children) {
     delete config.__self;
     delete config.__source; //表示这个元素实在哪行哪列哪个文件生成的
@@ -34,6 +34,8 @@ class Component{
 Component.prototype.isReactComponent={};//类组件
 const React = {
     createElement,
-    Component
+    Component,
+    useReducer,
+    useState
 };
 export default React;
