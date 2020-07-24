@@ -1,4 +1,4 @@
-import {ELEMENT_TEXT, TAG_HOST, TAG_ROOT, TAG_TEXT, PLACEMENT, DELETION, UPDATE, TAG_CLASS} from "./constants";
+import {ELEMENT_TEXT, TAG_HOST, TAG_ROOT, TAG_TEXT, PLACEMENT, DELETION, UPDATE, TAG_CLASS, TAG_FUNCTION_COMPONENT} from "./constants";
 import {setProps} from "./utils";
 import {UpdateQueue} from "./UpdateQueue";
 
@@ -96,7 +96,13 @@ function beginWork(currentFiber) {
         updateHost(currentFiber);
     }else if(currentFiber.tag === TAG_CLASS){
         updateClassComponent(currentFiber);
+    }else if(currentFiber.tag === TAG_FUNCTION_COMPONENT){
+        updateFunctionComponent(currentFiber);
     }
+}
+function updateFunctionComponent(currentFiber) {
+    const newChildren = [currentFiber.type(currentFiber.props)];
+    reconcileChildren(currentFiber,newChildren);
 }
 function updateClassComponent(currentFiber) {
     if(!currentFiber.stateNode){//类组件stateNode 组件的实例
@@ -162,6 +168,9 @@ function reconcileChildren(currentFiber, newChildren) {
         let tag;
         if(newChild&&typeof newChild.type==='function'&&newChild.type.prototype.isReactComponent){
             tag=TAG_CLASS;
+        }
+        else if (newChild && typeof newChild.type === 'function') {
+            tag = TAG_FUNCTION_COMPONENT; //这是函数组件
         } else if (newChild && newChild.type === ELEMENT_TEXT) {
             tag = TAG_TEXT; //这是一个文本节点
         } else if (newChild && typeof newChild.type === 'string') {
