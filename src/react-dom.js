@@ -1,5 +1,5 @@
 import {TAG_ROOT} from './constants'
-import {scheduleRoot} from "./schedule";
+import {scheduleRoot} from "./scheduler";
 
 //把一个元素渲染到一个容器内部
 function render(element, container) { //container=root DOM节点
