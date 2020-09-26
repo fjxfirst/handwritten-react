@@ -13,6 +13,41 @@ export function addEvent(dom,eventType,listener) {
     eventStore[eventType]=listener;
     document.addEventListener(eventType.slice(2),dispatchEvent,false)
 }
+let syntheticEvent;
 function dispatchEvent(event) {//event是原生事件对象，但是传递给我们的监听函数并不是他
-
+    let {type,target}=event;
+    let eventType='on'+type;
+    syntheticEvent=getSyntheticEvent(event)
+    //模拟事件冒泡
+    while(target){
+        let {eventStore}=target;
+        let listener=eventStore&& eventStore[eventType];
+        if(listener){
+            listener.call(target,syntheticEvent)
+        }
+        target=target.parentNode;
+    }
+    for(let key in syntheticEvent){
+        if(key!=='persist'){
+            syntheticEvent[key]=null;
+        }
+    }
+}
+function persist() {
+    syntheticEvent={persist}
+}
+function getSyntheticEvent(nativeEvent) {
+    if(!syntheticEvent){
+        syntheticEvent={persist};
+    }
+    syntheticEvent.nativeEvent =nativeEvent;
+    syntheticEvent.currentTarget=nativeEvent;
+    for(let key in nativeEvent){
+        if(typeof nativeEvent[key]==='function'){
+            syntheticEvent[key]=nativeEvent[key].bind(nativeEvent)
+        }else{
+            syntheticEvent[key]=nativeEvent[key]
+        }
+    }
+    return syntheticEvent
 }
