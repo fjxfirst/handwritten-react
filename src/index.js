@@ -1,23 +1,19 @@
 import React from './react';
 import ReactDOM from './react-dom';
-class ClassComponent extends React.Component{
+class Counter extends React.Component{
     constructor(props) {
         super(props);
-        
+        this.state={number:0};
     }
-    
+    add=()=>{
+        this.setState({number:this.state.number+1})
+    }
     render() {
-        return React.createElement('div',{id:'counter'},'hello');
+        return <div id={'counter'+this.state.number} onClick={this.add}>+</div>
     }
 }
-function FunctionCounter(){
-    return React.createElement('div',{id:'counter'},'hello');
-}
-let element1= React.createElement('div',{id:'counter'},'hello');
-let element2=React.createElement(ClassComponent,{id:'counter'});
-let element3=React.createElement(FunctionCounter);
 ReactDOM.render(
-    element2,
+    <Counter/>,
     document.getElementById('root')
 );
 

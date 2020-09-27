@@ -45,3 +45,6 @@ export function flatten(array){
     })(array);
     return flatted;
 }
+export function isFunction(obj) {
+    return typeof obj==='function';
+}

@@ -1,3 +1,5 @@
+import {updateQueue} from './component';
+
 /**
  * 在React中我们并不是把事件绑在要绑定的dom节点上，而是绑到document上，类型事件委托
  * 1.因为合成事件可以屏蔽浏览器的差异，不同浏览器绑定事件和触发事件的方法不一样
@@ -17,7 +19,8 @@ let syntheticEvent;
 function dispatchEvent(event) {//event是原生事件对象，但是传递给我们的监听函数并不是他
     let {type,target}=event;
     let eventType='on'+type;
-    syntheticEvent=getSyntheticEvent(event)
+    syntheticEvent=getSyntheticEvent(event);
+    updateQueue.isPending=true;
     //模拟事件冒泡
     while(target){
         let {eventStore}=target;
@@ -32,6 +35,9 @@ function dispatchEvent(event) {//event是原生事件对象，但是传递给我
             syntheticEvent[key]=null;
         }
     }
+    //当事件处理函数执行完成后，把批量更新模式改为false
+    updateQueue.isPending=false;
+    updateQueue.batchUpdate();
 }
 function persist() {
     syntheticEvent={persist}

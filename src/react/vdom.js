@@ -1,6 +1,24 @@
 import {CLASS_COMPONENT, ELEMENT, FUNCTION_COMPONENT, TEXT} from './constants';
 import {onlyOne,setProps,flatten} from './utils';
 
+export function compareTwoElements(oldRenderElement,newRenderElement) {
+    oldRenderElement=onlyOne(oldRenderElement);
+    newRenderElement=onlyOne(newRenderElement);
+    let currentDOM=oldRenderElement.dom;
+    let currentElement=oldRenderElement;
+    if(newRenderElement==null){
+        currentDOM.parentNode.removeChild(currentDOM);
+        currentDOM=null;
+    }else if(oldRenderElement.type!=newRenderElement.type){
+        let newDOM=createDOM(newRenderElement);
+        currentDOM.parentNode.replaceChild(newDOM,currentDOM);
+    }else{//新老节都有，并且类型一样，就要dom diff了,深度比较，还要比较它们的子节点，尽可能复用老节点
+        let newDOM=createDOM(newRenderElement);
+        currentDOM.parentNode.replaceChild(newDOM,currentDOM);
+        currentElement=newRenderElement
+    }
+    return currentElement;
+}
 
 function ReactElement($$typeof, type, key, ref, props) {
     let element = {
@@ -25,6 +43,7 @@ function createDOM(element) {
     }else if($$typeof===CLASS_COMPONENT){
         dom=createClassComponentDOM(element);
     }
+    element.dom=dom;//不管是什么类型的元素，都让他的dom属性指向它创建出来的真实ddom
     return dom;
 }
 function createClassComponentDOM(element) {
