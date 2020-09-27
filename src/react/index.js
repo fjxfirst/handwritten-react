@@ -1,5 +1,6 @@
-import {TEXT, ELEMENT} from './constants';
+import {TEXT, ELEMENT, CLASS_COMPONENT, FUNCTION_COMPONENT} from './constants';
 import {ReactElement} from './vdom';
+import {Component} from './component';
 
 function createElement(type, config = {}, ...children) {
     delete config.__source;
@@ -8,6 +9,10 @@ function createElement(type, config = {}, ...children) {
     let $$typeof = null;
     if(typeof type === 'string') {
         $$typeof = ELEMENT; //是原生dom类型
+    }else if (typeof type==='function'&&type.prototype.isReactComponent){
+        $$typeof =CLASS_COMPONENT;
+    }else if(typeof type==='function'){
+        $$typeof =FUNCTION_COMPONENT;
     }
     props.children = children.map(item => {
         if(typeof item === 'object') {
@@ -19,8 +24,9 @@ function createElement(type, config = {}, ...children) {
     });
     return ReactElement($$typeof, type, key, ref, props);
 }
-
+export {Component}
 const React = {
-    createElement
+    createElement,
+    Component
 };
 export default React;

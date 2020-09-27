@@ -1,17 +1,36 @@
 import React from './react';
 import ReactDOM from './react-dom';
-
-let onClick = () => {
-    alert('hello');
-};
-let element=<button id='sayHello' onClick={onClick}>
-    say<span style={{color:'red'}}>hello</span>
-</button>
-/*let element=React.createElement(
-    'button', {id:'sayHello',onClick},
-    'say',React.createElement('span',{color:'red'},'hello'));*/
-console.log(element);
+class ClassComponent extends React.Component{
+    constructor(props) {
+        super(props);
+        
+    }
+    
+    render() {
+        return React.createElement('div',{id:'counter'},'hello');
+    }
+}
+function FunctionCounter(){
+    return React.createElement('div',{id:'counter'},'hello');
+}
+let element1= React.createElement('div',{id:'counter'},'hello');
+let element2=React.createElement(ClassComponent,{id:'counter'});
+let element3=React.createElement(FunctionCounter);
 ReactDOM.render(
-    element,
+    element2,
     document.getElementById('root')
 );
+
+
+
+
+
+
+
+
+
+
+
+
+
+

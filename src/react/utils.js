@@ -28,3 +28,20 @@ function setProp(dom, key, value) {
         dom.setAttribute(key, value);
     }
 }
+
+export function flatten(array){
+    let flatted = [];
+    if(!Array.isArray(array)){
+        return array;
+    }
+    (function flat(array) {
+        array.forEach(item => {
+            if(Array.isArray(item)){
+                flat(item)
+            }else{
+                flatted.push(item);
+            }
+        })
+    })(array);
+    return flatted;
+}
