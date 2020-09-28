@@ -48,3 +48,18 @@ export function flatten(array){
 export function isFunction(obj) {
     return typeof obj==='function';
 }
+//老有新没有，删除       老新都有则更新  老没有新有则增加
+export function patchProps(dom,oldProps,newProps) {
+    for(let key in oldProps){
+        if(key!=='children'){
+            if(!newProps.hasOwnProperty(key)){
+                dom.removeAttribute(key);
+            }
+        }
+    }
+    for(let key in newProps){
+        if(key!=='children'){
+            setProp(dom,key,newProps[key])
+        }
+    }
+}
