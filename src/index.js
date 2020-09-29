@@ -1,5 +1,13 @@
 import React from './react';
 import ReactDOM from './react-dom';
+function FunctionCounter(props) {
+    return (
+        <div id={'counter'+props.number}>
+            <p>{props.number}</p>
+            <button onClick={props.add}>+</button>
+        </div>
+    )
+}
 class Counter extends React.Component{
     constructor(props) {
         super(props);
@@ -9,7 +17,7 @@ class Counter extends React.Component{
         this.setState({number:this.state.number+1})
     }
     render() {
-        return <div id={'counter'+this.state.number} onClick={this.add}>+</div>
+        return <FunctionCounter number={this.state.number} add={this.add}/>
     }
 }
 ReactDOM.render(

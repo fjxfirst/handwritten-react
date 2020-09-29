@@ -28,8 +28,32 @@ function updateElement(oldElement, newElement) {
             currentDOM.textContent=newElement.content;
         }
     }else if(oldElement.$$typeof===ELEMENT){
-        updateDOMProperties(currentDOM,oldElement.props,newElement.props)
+        updateDOMProperties(currentDOM,oldElement.props,newElement.props);
+        updateChildrenElements(currentDOM,oldElement.props.children,newElement.props.children)
+    }else if(oldElement.$$typeof===FUNCTION_COMPONENT){
+        updateFunctionComponent(oldElement, newElement);
+    }else if(oldElement.$$typeof===CLASS_COMPONENT){
+        updateClassComponent(oldElement, newElement);
     }
+}
+function updateChildrenElements(dom,oldChildrenElements,newChildrenElements) {
+    diff(dom,oldChildrenElements,newChildrenElements);
+}
+function diff(parentNode,oldChildrenElements,newChildrenElements){
+
+}
+function updateClassComponent(oldElement, newElement) {
+    let componentInstance=oldElement.componentInstance;
+    let $updater=componentInstance.$updater;
+    let nextProps=newElement.props;
+    $updater.emitUpdate(nextProps);
+}
+function updateFunctionComponent(oldElement, newElement) {
+    let oldRenderElement=oldElement.renderElement;
+    let newRenderElement=newElement.type(newElement.props);
+    let currentElement=compareTwoElements(oldRenderElement,newRenderElement);
+    newElement.renderElement = currentElement;
+    return currentElement;
 }
 function updateDOMProperties(dom,oldProps,newProps) {
     patchProps(dom,oldProps,newProps);
