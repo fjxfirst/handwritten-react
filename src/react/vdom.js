@@ -1,6 +1,7 @@
-import {CLASS_COMPONENT, ELEMENT, FUNCTION_COMPONENT, TEXT} from './constants';
+import {CLASS_COMPONENT, ELEMENT, FUNCTION_COMPONENT, INSERT, MOVE, REMOVE, TEXT} from './constants';
 import {onlyOne, setProps, flatten,patchProps} from './utils';
-
+let updateDepth = 0;// 更新层度
+let diffQueue=[];//这是一个补丁包，记录了哪些节点需要删除，哪些节点需要添加
 export function compareTwoElements(oldRenderElement, newRenderElement) {
     oldRenderElement = onlyOne(oldRenderElement);
     newRenderElement = onlyOne(newRenderElement);
@@ -30,6 +31,7 @@ function updateElement(oldElement, newElement) {
     }else if(oldElement.$$typeof===ELEMENT){
         updateDOMProperties(currentDOM,oldElement.props,newElement.props);
         updateChildrenElements(currentDOM,oldElement.props.children,newElement.props.children)
+        oldElement.props=newElement.props;
     }else if(oldElement.$$typeof===FUNCTION_COMPONENT){
         updateFunctionComponent(oldElement, newElement);
     }else if(oldElement.$$typeof===CLASS_COMPONENT){
@@ -37,10 +39,85 @@ function updateElement(oldElement, newElement) {
     }
 }
 function updateChildrenElements(dom,oldChildrenElements,newChildrenElements) {
+    updateDepth++;//每进入一个新的子层级
     diff(dom,oldChildrenElements,newChildrenElements);
+    updateDepth--;//每进比较完一层，返回上一级的时候
+    if(updateDepth===0){//说明比较完了
+        patch(diffQueue);//把收集到的补丁传给patch方法进行更新
+        diffQueue.length = 0;
+    }
 }
+function patch(diffQueue){}
 function diff(parentNode,oldChildrenElements,newChildrenElements){
-
+    let oldChildrenElementsMap=getChildrenElementsMap(oldChildrenElements);
+    let newChildrenElementsMap = getNewChildrenElementsMap(oldChildrenElementsMap,newChildrenElements);
+    let lastIndex = 0;
+    for(let i=0;i<newChildrenElements.length;i++){
+        let newChildElement = newChildrenElements[i];
+        if(newChildElement){
+            let newKey = newChildElement.key||i.toString();
+            let oldChildElement=oldChildrenElementsMap[newKey];
+            if(newChildElement===oldChildElement){
+                if(oldChildElement._mountIndex<lastIndex){
+                    diffQueue.push({
+                        parentNode,
+                        type:MOVE,
+                        fromIndex:oldChildElement._mountIndex,
+                        toIndex: i
+                    })
+                }
+                lastIndex = Math.max(oldChildElement._mountIndex,lastIndex)
+            }else{//如果新老元素不相等，直接插入
+                diffQueue.push({
+                    parentNode,
+                    type:INSERT,
+                    toIndex:i,
+                    dom:createDOM(newChildElement)
+                });
+                newChildElement._mountIndex=i;
+            }
+        }
+        for (let oldKey in oldChildrenElementsMap){
+            if(!newChildrenElementsMap.hasOwnProperty(oldKey)){
+                let oldChildElement = oldChildrenElementsMap[oldKey];
+                diffQueue.push({
+                    parentNode,
+                    type:REMOVE,
+                    fromIndex:oldChildElement._mountIndex
+                })
+            }
+        }
+    }
+}
+function getNewChildrenElementsMap(oldChildrenElementsMap,newChildrenElements) {
+    let newChildrenElementsMap={};
+    for(let i=0;i<newChildrenElements.length;i++){
+        let newChildElement = newChildrenElements[i];
+        if(newChildElement){//说明新节点不为null
+            let newKey=newChildElement.key||i.toString();
+            let oldChildElement=oldChildrenElementsMap[newKey];
+            //旧节点复用的条件是key一样并且标签类型也要一样
+            if(canDeepCompare(oldChildElement,newChildElement)){
+                updateElement(oldChildElement,newChildElement);
+                newChildrenElements[i]=oldChildElement;
+            }
+            newChildrenElementsMap[newKey]=newChildrenElements[i];
+        }
+    }
+}
+function canDeepCompare(oldChildElement,newChildrenElement) {
+    if(!!oldChildElement&&!!newChildrenElement){
+        return oldChildElement.type===newChildrenElement.type;
+    }
+    return false;
+}
+function getChildrenElementsMap(oldChildrenElements) {
+    let oldChildrenElementsMap={};
+    for(let i=0;i<oldChildrenElements.length;i++){
+        let oldKey=oldChildrenElements[i].key||i.toString();
+        oldChildrenElementsMap[oldKey]=oldChildrenElements[i];
+    }
+    return oldChildrenElementsMap;
 }
 function updateClassComponent(oldElement, newElement) {
     let componentInstance=oldElement.componentInstance;

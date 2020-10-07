@@ -3,7 +3,7 @@ import ReactDOM from './react-dom';
 function FunctionCounter(props) {
     return (
         <div id={'counter'+props.number}>
-            <p>{props.number}</p>
+            <p key='hello'>{props.number}</p>
             <button onClick={props.add}>+</button>
         </div>
     )
